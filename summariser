@@ -1,0 +1,50 @@
+import numpy as np
+import pandas as pd
+from bs4 import BeautifulSoup
+import nltk
+import urllib.request
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize, sent_tokenize
+from string import punctuation
+from heapq import nlargest
+from collections import defaultdict
+
+nltk.download('stopwords')
+
+url="https://en.wikipedia.org/wiki/Machine_learning"
+request = urllib.request.urlopen(url).read().decode('utf8','ignore')
+
+soup= BeautifulSoup(request, 'html.parser')
+text_p = soup.find_all('p')
+
+for i in range(0,len(text_p)):
+    text += text_p[i].text
+text = [te.lower() for te in text]
+str=""
+k= str.join(text)
+tokens =[t for t in k.split(' ')]
+
+clean_token =tokens[:]
+#define irrelevant words
+stopword = set(stopwords.words('english') + list(punctuation) + list("0123456789") )
+for token in tokens:
+    if token in stopword:
+        clean_token.remove(token)
+
+freq = nltk.FreqDist(clean_token)
+top_words=[]
+top_words=freq.most_common(100)
+## TOP WORDS
+
+nltk.download('punkt')
+sentences = sent_tokenize(k)
+
+ranking = defaultdict(int)
+for i, sent in enumerate(sentences):
+    for word in word_tokenize(sent.lower()):
+        if word in freq:
+            ranking[i]+=freq[word]
+    top_sentences = nlargest(10, ranking, ranking.get)
+
+sorted_sentences = [sentences[j] for j in sorted(top_sentences)]
+print(sorted_sentences)
